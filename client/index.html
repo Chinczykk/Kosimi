@@ -1,19 +1,19 @@
 <table style="height:100%;width:100%; position: absolute; top: 0; bottom: 0; left: 0; right: 0;">
     <tr style="height: 50%; width: 100%">
-       <td style="border:1px solid; text-align: center">
+       <td style="border:1px solid; text-align: center; width: 32.08%" id="p4points">
            Score: 0
        </td>
        <td style="  width: 36%"></td>
-       <td style="border:1px solid; text-align: center">
+       <td style="border:1px solid; text-align: center" id="p3points">
            Score: 0
        </td>
    </tr>
    <tr style="height: 50%; width: 100%">
-       <td style="border:1px solid; text-align: center">
+       <td style="border:1px solid; text-align: center; width: 32.08%" id="p1points">
            Score: 0
        </td>
        <td style="width: 36%"></td>
-       <td style="border:1px solid; text-align: center">
+       <td style="border:1px solid; text-align: center" id="p2points">
            Score: 0
        </td>
    </tr>
@@ -107,6 +107,39 @@
         document.getElementById('playersAlive').innerHTML = "PLAYERS ALIVE: " + data.players
     });
 
+    socket.on('updatePoints', function(data) {
+        console.log(data.points)
+        if (data.points.player1.score === -1) {
+            document.getElementById('p1points').innerHTML = 'Not playing';
+        } else {
+            document.getElementById('p1points').innerHTML = 'Score: ' + data.points.player1.score + '<br>' +
+                                                            'Bomb limit: ' + data.points.player1.bombLimit + '<br>' +
+                                                            'Bomb strength: ' + data.points.player1.bombStrength;
+        }
+        if (data.points.player2.score === -1) {
+            document.getElementById('p2points').innerHTML = 'Not playing';
+        } else {
+            document.getElementById('p2points').innerHTML = 'Score: ' + data.points.player2.score + '<br>' +
+                                                            'Bomb limit: ' + data.points.player2.bombLimit + '<br>' +
+                                                            'Bomb strength: ' + data.points.player2.bombStrength;
+        }
+
+        if (data.points.player3.score === -1) {
+            document.getElementById('p3points').innerHTML = 'Not playing';
+        } else {
+            document.getElementById('p3points').innerHTML = 'Score: ' + data.points.player3.score + '<br>' +
+                                                            'Bomb limit: ' + data.points.player3.bombLimit + '<br>' +
+                                                            'Bomb strength: ' + data.points.player3.bombStrength;
+        }
+
+        if (data.points.player4.score === -1) {
+            document.getElementById('p4points').innerHTML = 'Not playing';
+        } else {
+            document.getElementById('p4points').innerHTML = 'Score: ' + data.points.player4.score + '<br>' +
+                                                            'Bomb limit: ' + data.points.player4.bombLimit + '<br>' +
+                                                            'Bomb strength: ' + data.points.player4.bombStrength;
+        }
+    });
 
     socket.on('updateTime', function(data) {
         document.getElementById('time').innerHTML = data;

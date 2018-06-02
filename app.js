@@ -4,6 +4,28 @@ var serv = require('http').createServer(app)
 require('./variables.js');
 
 var t=1;
+var points = {
+    player1: {
+        score: -1,
+        bombLimit: -1,
+        bombStrength: -1
+    },
+    player2: {
+        score: -1,
+        bombLimit: -1,
+        bombStrength: -1
+    },
+    player3: {
+        score: -1,
+        bombLimit: -1,
+        bombStrength: -1
+    },
+    player4: {
+        score: -1,
+        bombLimit: -1,
+        bombStrength: -1
+    }
+}
 
 app.get('/', function (req, res) {
     res.sendFile(__dirname + '/client/menu.html');
@@ -139,6 +161,7 @@ const players = {
 
 var io = require('socket.io')(serv, {});
 io.sockets.on('connection', function (socket) {
+    io.emit('updatePoints', { points: points })
     if (PLAYERS_ONLINE === 0) {
         if (interval === false) {
             startInterval();
@@ -205,6 +228,10 @@ io.sockets.on('connection', function (socket) {
     socket.bombStrength = STARTING_STRENGTH;
     socket.bombLimit = STARTING_BOMB_LIMIT;
     socket.bombsUp = 0;
+    points[socket.player].score = 0;
+    points[socket.player].bombLimit = socket.bombLimit;
+    points[socket.player].bombStrength = socket.bombStrength;
+    io.emit('updatePoints', { points: points })
     SOCKET_LIST[socket.id] = socket
     _socket = socket;
     io.emit('updatePlayers', { players: PLAYERS_ONLINE })
@@ -228,7 +255,8 @@ function generate_events(socket) {
         PLAYERS_ALIVE--;
         io.emit('updatePlayers', { players: PLAYERS_ONLINE })
         io.emit('updatePlayersAlive', { players: PLAYERS_ALIVE })
-
+        points[socket.player].score = -1;
+        io.emit('updatePoints', { points: points });
         // for (var i in SOCKET_LIST) {
         //     var socket = SOCKET_LIST[i]
         //     socket.emit('updatePlayers', { players: PLAYERS_ONLINE })
@@ -540,6 +568,12 @@ function check_if_user_is_in_explosion_area() {
     }
     if (PLAYERS_ONLINE > 1) {
         if (PLAYERS_ALIVE <= 1) {
+            for (var socket_num in SOCKET_LIST) {
+                if (SOCKET_LIST[socket_num].dead === false) {
+                    points[SOCKET_LIST[socket_num].player].score++;
+                    io.emit('updatePoints', { points: points });
+                }
+            }
             reset_map()
         }
     } else {
@@ -652,10 +686,14 @@ function check_if_user_is_on_field_with_boost() {
     if (map[_socket.x][_socket.y].bombBoost) {
         map[_socket.x][_socket.y].bombBoost = false;
         _socket.bombLimit++;
+        points[_socket.player].bombLimit++;
+        io.emit('updatePoints', { points: points })
         SOCKET_LIST[_socket.id] = _socket
     } else if (map[_socket.x][_socket.y].strengthBoost) {
         map[_socket.x][_socket.y].strengthBoost = false;
         _socket.bombStrength++;
+        points[_socket.player].bombStrength++;
+        io.emit('updatePoints', { points: points })
         SOCKET_LIST[_socket.id] = _socket
     }
 }
