@@ -571,13 +571,20 @@ function check_if_user_is_in_explosion_area() {
             for (var socket_num in SOCKET_LIST) {
                 if (SOCKET_LIST[socket_num].dead === false) {
                     points[SOCKET_LIST[socket_num].player].score++;
-                    io.emit('updatePoints', { points: points });
                 }
+                points[SOCKET_LIST[socket_num].player].bombLimit = STARTING_BOMB_LIMIT;
+                points[SOCKET_LIST[socket_num].player].bombStrength = STARTING_STRENGTH;
             }
+            io.emit('updatePoints', { points: points });
             reset_map()
         }
     } else {
         if (PLAYERS_ALIVE <= 0) {
+            for (var socket_num in SOCKET_LIST) {
+                points[SOCKET_LIST[socket_num].player].bombLimit = STARTING_BOMB_LIMIT;
+                points[SOCKET_LIST[socket_num].player].bombStrength = STARTING_STRENGTH;
+            }
+            io.emit('updatePoints', { points: points });
             reset_map();
         }
     }
