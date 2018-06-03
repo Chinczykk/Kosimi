@@ -36,12 +36,19 @@ app.get('/game', function (req, res) {
 });
 
 app.post('/game', function (req, res) {
+    if (PLAYERS_ONLINE < 1) {
+        buildMap(0);
+        mode = 'normal';
+    }
     res.sendFile(__dirname + '/client/index.html');
 });
 
 app.post('/random', function (req, res) {
+    if (PLAYERS_ONLINE < 1) {
+        buildMap(0);
+        mode = 'random';
+    }
     res.sendFile(__dirname + '/client/index.html');
-    randomMode = true;
 });
 
 app.get('/random', function (req, res) {
@@ -49,8 +56,11 @@ app.get('/random', function (req, res) {
 });
 
 app.post('/battle', function (req, res) {
+    if (PLAYERS_ONLINE < 1) {
+        buildMap(0);
+        mode = 'battle';
+    }
     res.sendFile(__dirname + '/client/index.html');
-    battleRoyalMode = true;
     zone = 0;
 });
 
@@ -66,8 +76,7 @@ serv.listen(process.env.PORT || 2000);
 console.log('Server started');
 
 var zone;
-var battleRoyalMode = false;
-var randomMode = false;
+var mode = 'normal';
 var SOCKET_LIST = {}
 var bombs = []
 var room = { link: '3bnr5t', players: {} }
@@ -161,6 +170,7 @@ const players = {
 
 var io = require('socket.io')(serv, {});
 io.sockets.on('connection', function (socket) {
+    io.emit('updateMode', { mode: mode });
     io.emit('updatePoints', { points: points })
     if (PLAYERS_ONLINE === 0) {
         if (interval === false) {
@@ -362,16 +372,14 @@ function forInterval(){
             stopInterval();
         }
         t=0;
-        battleRoyalMode = false;
-        randomMode = false;
     }
     t=t+1;
     io.emit('updateTime',t);
 
-    if(PLAYERS_ONLINE>=1 && randomMode == true && t % 10 == 0 ){
+    if(PLAYERS_ONLINE>=1 && mode === 'random' && t % 10 == 0 ){
         randomizeMap();
     }
-    if(PLAYERS_ONLINE>=1 && battleRoyalMode == true && t % 25 == 0){
+    if(PLAYERS_ONLINE>=1 && mode === 'battle' && t % 25 == 0){
         battleRoyal(zone);
         zone++;
     }
@@ -592,6 +600,9 @@ function check_if_user_is_in_explosion_area() {
 
 function reset_map() {
     //stopInterval();
+    if (mode === 'battle') {
+        zone = 0;
+    }
     PLAYERS_ALIVE = 0;
     _explodes = []
     bombs = []
@@ -654,6 +665,7 @@ function battleRoyal(zone){
     }
     explodes.push(explodesToSend);
     _explodes.push(explodes);
+    check_if_user_is_in_explosion_area();
     pack = {map: map};
     io.emit('newPosition', pack);
 }
